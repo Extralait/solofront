@@ -1,18 +1,61 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <Navbar/>
+    <RegPopup
+        v-if="$route.hash==='#auth'"
+        :auth="auth"
+        :allPosition="allPosition"
+        :allDivision="allDivision"
+    />
+    <CreateVocation
+      v-if="$route.hash==='#create-vacation'"
+      :auth="auth"
+      :allPosition="allPosition"
+      :allDivision="allDivision"
+    />
+    <router-view
+    />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+
+import RegPopup from "@/components/common/RegPopup";
+import {mapActions, mapGetters} from "vuex";
+import Navbar from "./components/common/Navbar";
+import axios from "axios";
+import CreateVocation from "./components/common/CreateVocation";
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
-  }
+    RegPopup, Navbar,CreateVocation
+  },
+  data() {
+    return {
+      loading: true,
+      auth: []
+    }
+  },
+  methods: {
+    ...mapActions(['getVacancy','getMe', 'getDivision','leaderCheck', 'getPosition','refresh','verifyToken']),
+  },
+  computed: {
+    ...mapGetters(['allVacancy', 'allDivision', 'allPosition']),
+  },
+  async mounted() {
+    await this.getDivision()
+    await this.getPosition()
+    this.loading = false
+    if (localStorage.token) {
+      let token =localStorage.getItem('token')
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = 'JWT '+token
+        await this.verifyToken({"token":token})
+        await this.leaderCheck()
+      }
+    }
+  },
 }
 </script>
 
@@ -23,6 +66,29 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  position: relative;
+}
+
+.no-scroll {
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: block;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+}
+
+
 </style>
